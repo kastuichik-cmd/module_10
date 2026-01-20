@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:17-alpine
@@ -8,22 +6,17 @@ services:
       POSTGRES_DB: mydb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d mydb" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - app-network
     ports:
       - "5432:5432"
     volumes:
       - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
 
   app:
     build: book-service
     container_name: my-app
+    restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
@@ -32,11 +25,9 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     networks:
       - app-network
-
 
   notification:
     build: ./notification-service
